@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1a6b3c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Bardienst">
+<title>Bardienst Tracker</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --green-dark: #1a6b3c;
+    --green-mid: #2d8a55;
+    --green-light: #e8f5ee;
+    --green-accent: #4caf78;
+    --text-primary: #1a2e22;
+    --text-secondary: #5a7a68;
+    --text-muted: #8aaa98;
+    --bg: #f4f9f6;
+    --card: #ffffff;
+    --border: #d0e8db;
+    --danger: #c0392b;
+    --danger-light: #fdf2f0;
+    --amber: #d68910;
+    --amber-light: #fef9e7;
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100dvh;
+    max-width: 480px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  /* Header */
+  .header {
+    background: var(--green-dark);
+    color: white;
+    padding: 16px 20px 14px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-top { display: flex; align-items: center; justify-content: space-between; }
+  .header h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
+  .header .subtitle { font-size: 13px; opacity: 0.75; margin-top: 2px; }
+  .period-badge {
+    background: rgba(255,255,255,0.18);
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+
+  /* Nav tabs */
+  .nav {
+    display: flex;
+    background: var(--green-dark);
+    border-top: 1px solid rgba(255,255,255,0.12);
+  }
+  .nav-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.6);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 10px 8px 12px;
+    cursor: pointer;
+    transition: color 0.15s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+  }
+  .nav-btn.active { color: white; }
+  .nav-btn svg { width: 20px; height: 20px; }
+
+  /* Main content */
+  .page { display: none; padding: 16px; }
+  .page.active { display: block; }
+
+  /* Quick add card */
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    margin-top: 4px;
+  }
+
+  .card {
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+
+  /* Date row */
+  .row { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; }
+  .row label { font-size: 13px; color: var(--text-secondary); min-width: 52px; }
+
+  input[type="date"], input[type="time"] {
+    flex: 1;
+    height: 44px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0 12px;
+    font-size: 15px;
+    color: var(--text-primary);
+    background: var(--bg);
+    outline: none;
+    -webkit-appearance: none;
+  }
+  input[type="date"]:focus, input[type="time"]:focus {
+    border-color: var(--green-mid);
+  }
+
+  textarea {
+    width: 100%;
+    height: 60px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    font-size: 14px;
+    color: var(--text-primary);
+    background: var(--bg);
+    resize: none;
+    outline: none;
+    font-family: inherit;
+  }
+  textarea:focus { border-color: var(--green-mid); }
+
+  .btn {
+    width: 100%;
+    height: 48px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.1s, opacity 0.1s;
+  }
+  .btn:active { transform: scale(0.98); opacity: 0.9; }
+  .btn-primary { background: var(--green-dark); color: white; }
+  .btn-danger { background: var(--danger); color: white; }
+  .btn-outline { background: none; border: 1.5px solid var(--border); color: var(--text-secondary); }
+
+  /* Quick time btns */
+  .quick-times {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .qt-btn {
+    height: 36px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .qt-btn:active { background: var(--green-light); border-color: var(--green-mid); }
+  .qt-btn.selected { background: var(--green-light); border-color: var(--green-dark); color: var(--green-dark); font-weight: 700; }
+
+  /* History list */
+  .dienst-item {
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    position: relative;
+  }
+  .dienst-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--green-accent);
+    margin-top: 4px;
+    flex-shrink: 0;
+  }
+  .dienst-info { flex: 1; }
+  .dienst-date { font-size: 13px; color: var(--text-muted); margin-bottom: 3px; }
+  .dienst-times { font-size: 17px; font-weight: 700; color: var(--text-primary); }
+  .dienst-dur {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--green-light);
+    color: var(--green-dark);
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-top: 4px;
+  }
+  .dienst-note { font-size: 13px; color: var(--text-secondary); margin-top: 5px; font-style: italic; }
+  .dienst-actions { display: flex; flex-direction: column; gap: 6px; }
+  .icon-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: all 0.15s;
+  }
+  .icon-btn:active { transform: scale(0.92); }
+  .icon-btn.del:active { background: var(--danger-light); border-color: var(--danger); color: var(--danger); }
+  .icon-btn svg { width: 16px; height: 16px; }
+
+  /* Stats */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+  }
+  .stat-label { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-value { font-size: 26px; font-weight: 800; color: var(--green-dark); margin-top: 4px; line-height: 1; }
+  .stat-sub { font-size: 12px; color: var(--text-secondary); margin-top: 3px; }
+
+  /* Export */
+  .export-card {
+    background: var(--green-dark);
+    border-radius: var(--radius);
+    padding: 20px;
+    color: white;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+  .export-card h3 { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+  .export-card p { font-size: 13px; opacity: 0.8; margin-bottom: 16px; }
+  .btn-white { background: white; color: var(--green-dark); }
+
+  /* Period selector */
+  .period-select { display: flex; gap: 8px; margin-bottom: 16px; }
+  .period-btn {
+    flex: 1;
+    height: 38px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    font-size: 13px;
+    color: var(--text-secondary);
+    cursor: pointer;
+  }
+  .period-btn.active { border-color: var(--green-dark); background: var(--green-light); color: var(--green-dark); font-weight: 600; }
+
+  /* Empty state */
+  .empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+  }
+  .empty svg { width: 48px; height: 48px; opacity: 0.4; margin-bottom: 12px; }
+  .empty p { font-size: 14px; }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--text-primary);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    opacity: 0;
+    transition: all 0.25s;
+    z-index: 999;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Install banner */
+  .install-banner {
+    background: var(--amber-light);
+    border: 1px solid #f0d080;
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .install-banner p { font-size: 13px; color: #7a5a00; flex: 1; }
+  .install-banner button { background: var(--amber); color: white; border: none; border-radius: 8px; padding: 6px 12px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+
+  /* Edit modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 200;
+    align-items: flex-end;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: white;
+    border-radius: var(--radius) var(--radius) 0 0;
+    padding: 20px;
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+  .modal h3 { font-size: 17px; font-weight: 700; margin-bottom: 16px; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 16px; }
+  .modal-actions .btn { flex: 1; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div>
+      <h1>⚽ Bardienst</h1>
+      <div class="subtitle">Voetbalclub tijdregistratie</div>
+    </div>
+    <div class="period-badge" id="currentPeriodBadge">loading…</div>
+  </div>
+  <nav class="nav">
+    <button class="nav-btn active" onclick="showPage('invoer', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l2 2"/></svg>
+      Invoer
+    </button>
+    <button class="nav-btn" onclick="showPage('overzicht', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+      Overzicht
+    </button>
+    <button class="nav-btn" onclick="showPage('export', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6M9 15l3 3 3-3"/></svg>
+      Export
+    </button>
+    <button class="nav-btn" onclick="showPage('instellingen', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+      Instellingen
+    </button>
+  </nav>
+</div>
+
+<!-- INVOER PAGE -->
+<div id="page-invoer" class="page active">
+  <div id="installBanner" class="install-banner" style="display:none">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d68910" stroke-width="2"><path d="M4 16v1a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-1"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    <p>Installeer als app voor snellere toegang</p>
+    <button onclick="triggerInstall()">Installeer</button>
+  </div>
+
+  <div class="section-label">Nieuwe bardienst</div>
+  <div class="card">
+    <div class="row">
+      <label>Datum</label>
+      <input type="date" id="inputDatum">
+    </div>
+    <div class="row">
+      <label>Van</label>
+      <input type="time" id="inputVan">
+    </div>
+    <div class="row">
+      <label>Tot</label>
+      <input type="time" id="inputTot">
+    </div>
+
+    <div class="section-label" style="margin-top:12px">Snelle tijden (Van)</div>
+    <div class="quick-times" id="quickVan">
+      <button class="qt-btn" onclick="setQuickTime('van','09:00')">09:00</button>
+      <button class="qt-btn" onclick="setQuickTime('van','10:00')">10:00</button>
+      <button class="qt-btn" onclick="setQuickTime('van','11:00')">11:00</button>
+      <button class="qt-btn" onclick="setQuickTime('van','12:00')">12:00</button>
+      <button class="qt-btn" onclick="setQuickTime('van','13:00')">13:00</button>
+      <button class="qt-btn" onclick="setQuickTime('van','14:00')">14:00</button>
+      <button class="qt-btn" onclick="setQuickTime('van','15:00')">15:00</button>
+      <button class="qt-btn" onclick="setQuickTime('van','16:00')">16:00</button>
+    </div>
+
+    <div class="section-label">Snelle tijden (Tot)</div>
+    <div class="quick-times" id="quickTot">
+      <button class="qt-btn" onclick="setQuickTime('tot','16:00')">16:00</button>
+      <button class="qt-btn" onclick="setQuickTime('tot','17:00')">17:00</button>
+      <button class="qt-btn" onclick="setQuickTime('tot','18:00')">18:00</button>
+      <button class="qt-btn" onclick="setQuickTime('tot','19:00')">19:00</button>
+      <button class="qt-btn" onclick="setQuickTime('tot','20:00')">20:00</button>
+      <button class="qt-btn" onclick="setQuickTime('tot','21:00')">21:00</button>
+      <button class="qt-btn" onclick="setQuickTime('tot','22:00')">22:00</button>
+      <button class="qt-btn" onclick="setQuickTime('tot','23:00')">23:00</button>
+    </div>
+
+    <div class="row" style="margin-bottom:0">
+      <label>Notitie</label>
+      <textarea id="inputNotitie" placeholder="Optioneel (bijv. wedstrijd Zat thuis)"></textarea>
+    </div>
+  </div>
+
+  <div id="duurPreview" style="display:none" class="card" style="padding:12px 16px">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <span style="font-size:14px;color:var(--text-secondary)">Duur:</span>
+      <span id="duurText" style="font-size:18px;font-weight:700;color:var(--green-dark)"></span>
+    </div>
+  </div>
+
+  <button class="btn btn-primary" onclick="saveDienst()">Bardienst opslaan</button>
+</div>
+
+<!-- OVERZICHT PAGE -->
+<div id="page-overzicht" class="page">
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Deze periode</div>
+      <div class="stat-value" id="statAantal">0</div>
+      <div class="stat-sub">diensten</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Totaal uren</div>
+      <div class="stat-value" id="statUren">0</div>
+      <div class="stat-sub" id="statMinLabel">minuten</div>
+    </div>
+  </div>
+
+  <div class="section-label">Filter periode</div>
+  <div class="period-select" id="periodSelect"></div>
+
+  <div class="section-label">Diensten</div>
+  <div id="dienstenList"></div>
+</div>
+
+<!-- EXPORT PAGE -->
+<div id="page-export" class="page">
+  <div class="export-card">
+    <h3>📊 Excel exporteren</h3>
+    <p>Download een kant-en-klaar Excel-bestand voor de opgaveperiode van 2 maanden.</p>
+    <button class="btn btn-white" onclick="exportExcel()">⬇ Download Excel</button>
+  </div>
+
+  <div class="section-label">Exportperiode kiezen</div>
+  <div id="exportPeriodSelect" class="card">
+    <div class="row">
+      <label>Van</label>
+      <input type="date" id="exportVan">
+    </div>
+    <div class="row" style="margin-bottom:12px">
+      <label>Tot</label>
+      <input type="date" id="exportTot">
+    </div>
+    <button class="btn btn-outline" onclick="exportExcel()">Export geselecteerde periode</button>
+  </div>
+
+  <div class="section-label">Snelkoppelingen</div>
+  <div class="card">
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <button class="btn btn-outline" onclick="setExportPeriod(0)">Huidige 2-maandsperiode</button>
+      <button class="btn btn-outline" onclick="setExportPeriod(-1)">Vorige 2-maandsperiode</button>
+      <button class="btn btn-outline" onclick="setExportPeriod(-2)">Perioden daarvoor</button>
+    </div>
+  </div>
+</div>
+
+<!-- INSTELLINGEN PAGE -->
+<div id="page-instellingen" class="page">
+  <div class="section-label">Clubnaam</div>
+  <div class="card">
+    <input type="text" id="settingClub" placeholder="Naam voetbalclub" style="width:100%;height:44px;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:0 12px;font-size:15px;background:var(--bg);outline:none;color:var(--text-primary)">
+  </div>
+
+  <div class="section-label">Mijn naam</div>
+  <div class="card">
+    <input type="text" id="settingNaam" placeholder="Jouw naam" style="width:100%;height:44px;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:0 12px;font-size:15px;background:var(--bg);outline:none;color:var(--text-primary)">
+  </div>
+
+  <div class="section-label">2-Maandsperiodes starten</div>
+  <div class="card">
+    <div style="font-size:14px;color:var(--text-secondary);margin-bottom:8px">Welke maand start de eerste periode van het seizoen?</div>
+    <select id="settingStartMaand" style="width:100%;height:44px;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:0 12px;font-size:15px;background:var(--bg);color:var(--text-primary);outline:none">
+      <option value="1">Januari / Maart / Mei / Jul / Sep / Nov</option>
+      <option value="7" selected>Juli / Sep / Nov / Jan / Mrt / Mei</option>
+      <option value="8">Augustus / Okt / Dec / Feb / Apr / Jun</option>
+    </select>
+  </div>
+
+  <button class="btn btn-primary" onclick="saveSettings()" style="margin-top:4px">Opslaan</button>
+
+  <div style="margin-top:24px"></div>
+  <div class="section-label">Gevaarlijke zone</div>
+  <div class="card">
+    <button class="btn btn-danger" onclick="clearAllData()">Alle gegevens wissen</button>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <h3>Dienst aanpassen</h3>
+    <input type="hidden" id="editId">
+    <div class="row"><label>Datum</label><input type="date" id="editDatum"></div>
+    <div class="row"><label>Van</label><input type="time" id="editVan"></div>
+    <div class="row" style="margin-bottom:0"><label>Tot</label><input type="time" id="editTot"></div>
+    <div class="row" style="margin-top:10px;margin-bottom:0">
+      <label>Notitie</label>
+      <textarea id="editNotitie" style="height:50px"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeEdit()">Annuleren</button>
+      <button class="btn btn-primary" onclick="saveEdit()">Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ========== DATA ==========
+function getData() {
+  try { return JSON.parse(localStorage.getItem('bardiensten') || '[]'); } catch { return []; }
+}
+function saveData(d) { localStorage.setItem('bardiensten', JSON.stringify(d)); }
+function getSettings() {
+  try { return JSON.parse(localStorage.getItem('bd_settings') || '{}'); } catch { return {}; }
+}
+function saveSettingsData(s) { localStorage.setItem('bd_settings', JSON.stringify(s)); }
+
+// ========== PERIOD ==========
+function getPeriodStart(offsetPeriods = 0) {
+  const s = getSettings();
+  const startMaand = parseInt(s.startMaand || 7); // 1-based
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1; // 1-based
+
+  // Find which 2-month period we're in
+  // Periods are: startMaand, startMaand+2, startMaand+4, ...
+  const months = [];
+  for (let i = 0; i < 12; i++) {
+    const m = ((startMaand - 1 + i * 2) % 12) + 1;
+    months.push(m);
+  }
+
+  let currentPeriodIdx = 0;
+  for (let i = 0; i < 6; i++) {
+    const m = ((startMaand - 1 + i * 2) % 12) + 1;
+    const mNext = ((startMaand - 1 + i * 2 + 2) % 12) + 1;
+    if (mNext > m) {
+      if (month >= m && month < mNext) { currentPeriodIdx = i; break; }
+    } else {
+      if (month >= m || month < mNext) { currentPeriodIdx = i; break; }
+    }
+  }
+
+  const targetIdx = currentPeriodIdx + offsetPeriods;
+  const startM = ((startMaand - 1 + targetIdx * 2) % 12) + 1;
+  const endM = ((startMaand - 1 + targetIdx * 2 + 2) % 12) + 1;
+
+  let startY = year;
+  let endY = year;
+
+  // Rough year adjustment
+  if (offsetPeriods < 0) {
+    if (startM > month) startY = year - 1;
+    if (endM > month) endY = year - 1;
+  }
+  if (startM > 10 && month < 3) startY = year - 1;
+  if (endM < 3 && startM > 10) endY = startY;
+  if (endM === 1 || (endM < startM)) endY = startY + 1;
+
+  const start = new Date(startY, startM - 1, 1);
+  const end = new Date(endY, endM - 1, 1);
+  end.setDate(end.getDate() - 1);
+
+  return { start, end };
+}
+
+function formatPeriodLabel(start, end) {
+  const months = ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
+  return `${months[start.getMonth()]} – ${months[end.getMonth()]} ${end.getFullYear()}`;
+}
+
+// ========== UI ==========
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'overzicht') renderOverzicht();
+  if (name === 'instellingen') loadSettings();
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function setQuickTime(field, time) {
+  if (field === 'van') {
+    document.getElementById('inputVan').value = time;
+    document.querySelectorAll('#quickVan .qt-btn').forEach(b => b.classList.remove('selected'));
+  } else {
+    document.getElementById('inputTot').value = time;
+    document.querySelectorAll('#quickTot .qt-btn').forEach(b => b.classList.remove('selected'));
+  }
+  event.target.classList.add('selected');
+  updateDuurPreview();
+}
+
+function updateDuurPreview() {
+  const van = document.getElementById('inputVan').value;
+  const tot = document.getElementById('inputTot').value;
+  const preview = document.getElementById('duurPreview');
+  if (van && tot) {
+    const mins = calcMins(van, tot);
+    if (mins > 0) {
+      document.getElementById('duurText').textContent = formatDuur(mins);
+      preview.style.display = 'block';
+      return;
+    }
+  }
+  preview.style.display = 'none';
+}
+
+document.getElementById('inputVan').addEventListener('change', updateDuurPreview);
+document.getElementById('inputTot').addEventListener('change', updateDuurPreview);
+
+// ========== SAVE ==========
+function saveDienst() {
+  const datum = document.getElementById('inputDatum').value;
+  const van = document.getElementById('inputVan').value;
+  const tot = document.getElementById('inputTot').value;
+  const notitie = document.getElementById('inputNotitie').value.trim();
+
+  if (!datum || !van || !tot) { toast('⚠️ Vul datum, van en tot in'); return; }
+  const mins = calcMins(van, tot);
+  if (mins <= 0) { toast('⚠️ Eindtijd moet na starttijd zijn'); return; }
+
+  const data = getData();
+  data.push({ id: Date.now(), datum, van, tot, notitie });
+  data.sort((a, b) => a.datum.localeCompare(b.datum));
+  saveData(data);
+
+  // Reset
+  document.getElementById('inputDatum').value = '';
+  document.getElementById('inputVan').value = '';
+  document.getElementById('inputTot').value = '';
+  document.getElementById('inputNotitie').value = '';
+  document.querySelectorAll('.qt-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('duurPreview').style.display = 'none';
+
+  toast(`✅ Opgeslagen! (${formatDuur(mins)})`);
+}
+
+// ========== OVERZICHT ==========
+let currentFilter = 'huidig';
+
+function renderOverzicht() {
+  const { start, end } = getPeriodStart(0);
+  updatePeriodSelect();
+  renderDienstenList();
+}
+
+function updatePeriodSelect() {
+  const container = document.getElementById('periodSelect');
+  const options = [
+    { key: 'huidig', label: formatPeriodLabel(...Object.values(getPeriodStart(0))) },
+    { key: 'vorig', label: formatPeriodLabel(...Object.values(getPeriodStart(-1))) },
+    { key: 'alles', label: 'Alles' }
+  ];
+  container.innerHTML = options.map(o =>
+    `<button class="period-btn ${currentFilter === o.key ? 'active' : ''}" onclick="setFilter('${o.key}')">${o.key === 'huidig' ? '✓ ' : ''}${o.label}</button>`
+  ).join('');
+}
+
+function setFilter(f) {
+  currentFilter = f;
+  renderOverzicht();
+}
+
+function getFilteredData() {
+  const all = getData();
+  if (currentFilter === 'alles') return all;
+  const offset = currentFilter === 'vorig' ? -1 : 0;
+  const { start, end } = getPeriodStart(offset);
+  return all.filter(d => {
+    const dt = new Date(d.datum);
+    return dt >= start && dt <= end;
+  });
+}
+
+function renderDienstenList() {
+  const data = getFilteredData();
+  const list = document.getElementById('dienstenList');
+
+  const total = data.reduce((s, d) => s + calcMins(d.van, d.tot), 0);
+  document.getElementById('statAantal').textContent = data.length;
+  if (total >= 60) {
+    document.getElementById('statUren').textContent = (total / 60).toFixed(1);
+    document.getElementById('statMinLabel').textContent = 'uren';
+  } else {
+    document.getElementById('statUren').textContent = total;
+    document.getElementById('statMinLabel').textContent = 'minuten';
+  }
+
+  if (!data.length) {
+    list.innerHTML = `<div class="empty">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+      <p>Geen diensten gevonden</p>
+    </div>`;
+    return;
+  }
+
+  const reversed = [...data].reverse();
+  list.innerHTML = reversed.map(d => {
+    const mins = calcMins(d.van, d.tot);
+    const dateStr = formatDate(d.datum);
+    return `<div class="dienst-item">
+      <div class="dienst-dot"></div>
+      <div class="dienst-info">
+        <div class="dienst-date">${dateStr}</div>
+        <div class="dienst-times">${d.van} – ${d.tot}</div>
+        <span class="dienst-dur">${formatDuur(mins)}</span>
+        ${d.notitie ? `<div class="dienst-note">${d.notitie}</div>` : ''}
+      </div>
+      <div class="dienst-actions">
+        <button class="icon-btn" onclick="openEdit(${d.id})" title="Bewerken">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="icon-btn del" onclick="deleteDienst(${d.id})" title="Verwijderen">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function deleteDienst(id) {
+  if (!confirm('Dienst verwijderen?')) return;
+  const data = getData().filter(d => d.id !== id);
+  saveData(data);
+  renderOverzicht();
+  toast('🗑 Verwijderd');
+}
+
+// ========== EDIT ==========
+function openEdit(id) {
+  const d = getData().find(x => x.id === id);
+  if (!d) return;
+  document.getElementById('editId').value = id;
+  document.getElementById('editDatum').value = d.datum;
+  document.getElementById('editVan').value = d.van;
+  document.getElementById('editTot').value = d.tot;
+  document.getElementById('editNotitie').value = d.notitie || '';
+  document.getElementById('editModal').classList.add('open');
+}
+
+function closeEdit() {
+  document.getElementById('editModal').classList.remove('open');
+}
+
+function saveEdit() {
+  const id = parseInt(document.getElementById('editId').value);
+  const datum = document.getElementById('editDatum').value;
+  const van = document.getElementById('editVan').value;
+  const tot = document.getElementById('editTot').value;
+  const notitie = document.getElementById('editNotitie').value.trim();
+  if (!datum || !van || !tot) { toast('⚠️ Vul alles in'); return; }
+  const data = getData().map(d => d.id === id ? { ...d, datum, van, tot, notitie } : d);
+  saveData(data);
+  closeEdit();
+  renderOverzicht();
+  toast('✅ Aangepast');
+}
+
+// ========== EXPORT ==========
+function setExportPeriod(offset) {
+  const { start, end } = getPeriodStart(offset);
+  document.getElementById('exportVan').value = start.toISOString().split('T')[0];
+  document.getElementById('exportTot').value = end.toISOString().split('T')[0];
+}
+
+function exportExcel() {
+  const vanStr = document.getElementById('exportVan').value;
+  const totStr = document.getElementById('exportTot').value;
+  let data = getData();
+
+  if (vanStr && totStr) {
+    const van = new Date(vanStr);
+    const tot = new Date(totStr);
+    data = data.filter(d => {
+      const dt = new Date(d.datum);
+      return dt >= van && dt <= tot;
+    });
+  }
+
+  if (!data.length) { toast('Geen diensten in deze periode'); return; }
+
+  const s = getSettings();
+  const naam = s.naam || '';
+  const club = s.club || 'Voetbalclub';
+
+  // Build CSV (Excel opens this fine with UTF-8 BOM)
+  const rows = [
+    ['Bardienst Overzicht'],
+    ['Club:', club],
+    ['Naam:', naam],
+    ['Periode:', vanStr ? `${vanStr} t/m ${totStr}` : 'Alle diensten'],
+    ['Gegenereerd:', new Date().toLocaleDateString('nl-NL')],
+    [],
+    ['Datum', 'Dag', 'Van', 'Tot', 'Duur (uren)', 'Duur (min)', 'Notitie'],
+    ...data.map(d => {
+      const dt = new Date(d.datum);
+      const dag = ['Zondag','Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag'][dt.getDay()];
+      const mins = calcMins(d.van, d.tot);
+      return [
+        d.datum, dag, d.van, d.tot,
+        (mins / 60).toFixed(2).replace('.', ','),
+        mins,
+        d.notitie || ''
+      ];
+    }),
+    [],
+    ['', '', '', 'TOTAAL',
+      (data.reduce((s,d) => s + calcMins(d.van,d.tot), 0) / 60).toFixed(2).replace('.', ','),
+      data.reduce((s,d) => s + calcMins(d.van,d.tot), 0),
+      ''
+    ]
+  ];
+
+  const csvContent = '\uFEFF' + rows.map(r =>
+    r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(';')
+  ).join('\n');
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const period = vanStr ? `${vanStr.substring(0,7)}_${totStr.substring(0,7)}` : 'alle';
+  a.download = `bardienst_${period}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast(`✅ Excel gedownload (${data.length} diensten)`);
+}
+
+// ========== SETTINGS ==========
+function loadSettings() {
+  const s = getSettings();
+  document.getElementById('settingClub').value = s.club || '';
+  document.getElementById('settingNaam').value = s.naam || '';
+  document.getElementById('settingStartMaand').value = s.startMaand || '7';
+}
+
+function saveSettings() {
+  const s = {
+    club: document.getElementById('settingClub').value.trim(),
+    naam: document.getElementById('settingNaam').value.trim(),
+    startMaand: document.getElementById('settingStartMaand').value,
+  };
+  saveSettingsData(s);
+  toast('✅ Instellingen opgeslagen');
+  updatePeriodBadge();
+}
+
+function clearAllData() {
+  if (!confirm('Weet je zeker dat je ALLE bardiensten wilt wissen? Dit kan niet ongedaan worden gemaakt.')) return;
+  localStorage.removeItem('bardiensten');
+  toast('Alle gegevens gewist');
+  renderOverzicht();
+}
+
+// ========== HELPERS ==========
+function calcMins(van, tot) {
+  const [vh, vm] = van.split(':').map(Number);
+  const [th, tm] = tot.split(':').map(Number);
+  return (th * 60 + tm) - (vh * 60 + vm);
+}
+
+function formatDuur(mins) {
+  if (mins < 60) return `${mins} min`;
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return m === 0 ? `${h} uur` : `${h}u ${m}m`;
+}
+
+function formatDate(str) {
+  const dt = new Date(str + 'T12:00:00');
+  const dag = ['zo','ma','di','wo','do','vr','za'][dt.getDay()];
+  const months = ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
+  return `${dag} ${dt.getDate()} ${months[dt.getMonth()]} ${dt.getFullYear()}`;
+}
+
+function updatePeriodBadge() {
+  const { start, end } = getPeriodStart(0);
+  document.getElementById('currentPeriodBadge').textContent = formatPeriodLabel(start, end);
+}
+
+// ========== INIT ==========
+function init() {
+  // Set today as default date
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('inputDatum').value = today;
+
+  // Set default export period
+  setExportPeriod(0);
+  updatePeriodBadge();
+
+  // Close modal on overlay click
+  document.getElementById('editModal').addEventListener('click', e => {
+    if (e.target === document.getElementById('editModal')) closeEdit();
+  });
+}
+
+// ========== PWA INSTALL ==========
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('installBanner').style.display = 'flex';
+});
+
+function triggerInstall() {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(() => {
+      deferredPrompt = null;
+      document.getElementById('installBanner').style.display = 'none';
+    });
+  }
+}
+
+window.addEventListener('appinstalled', () => {
+  document.getElementById('installBanner').style.display = 'none';
+  toast('✅ App geïnstalleerd!');
+});
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+init();
+</script>
+</body>
+</html>
